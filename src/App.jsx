@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react'; // <-- THÊM useCallback
 import Board from './components/Board';
 import Scoreboard from './components/Scoreboard';
 import GameControls from './components/GameControls';
@@ -9,16 +9,22 @@ const aiPlayer = 'O';
 export default function App() {
   const [squares, setSquares] = useState(Array(9).fill(null));
   const [isXNext, setIsXNext] = useState(true);
-  const [gameMode, setGameMode] = useState('pvp'); // 'pvp', 'easy', 'hard'
+  const [gameMode, setGameMode] = useState('pvp');
   const [scores, setScores] = useState({ X: 0, O: 0, T: 0, mode: 'pvp' });
 
   const winnerInfo = useMemo(() => calculateWinner(squares), [squares]);
 
-  const handleModeChange = (mode) => {
+  // BỌC TRONG useCallback ĐỂ HÀM NÀY ỔN ĐỊNH, KHÔNG BỊ TẠO LẠI MỖI LẦN RENDER
+  const handleRestart = useCallback(() => {
+    setSquares(Array(9).fill(null));
+    setIsXNext(true);
+  }, []); // Mảng rỗng vì hàm này không phụ thuộc vào bất cứ props hay state nào
+
+  const handleModeChange = useCallback((mode) => {
     setGameMode(mode);
-    setScores(prev => ({ ...prev, mode: mode }));
+    setScores(prev => ({ X: prev.X, O: prev.O, T: prev.T, mode: mode }));
     handleRestart();
-  };
+  }, [handleRestart]); // Phụ thuộc vào handleRestart
 
   const handleClick = (i) => {
     if (winnerInfo || squares[i] || (gameMode !== 'pvp' && !isXNext)) {
@@ -29,13 +35,8 @@ export default function App() {
     setSquares(newSquares);
     setIsXNext(!isXNext);
   };
-
-  const handleRestart = () => {
-    setSquares(Array(9).fill(null));
-    setIsXNext(true);
-  };
   
-  // Logic cho lượt đi của AI
+  // Logic AI
   useEffect(() => {
     if (gameMode !== 'pvp' && !isXNext && !winnerInfo) {
       const makeAiMove = () => {
@@ -64,7 +65,7 @@ export default function App() {
     }
   }, [isXNext, gameMode, winnerInfo, squares]);
 
-  // Cập nhật điểm số khi game kết thúc
+  // Cập nhật điểm số
   useEffect(() => {
     if (winnerInfo) {
       setScores(prevScores => {
@@ -77,19 +78,16 @@ export default function App() {
     }
   }, [winnerInfo?.winner]);
   
-  // === TÍNH NĂNG MỚI: TỰ ĐỘNG CHƠI LẠI ===
+  // Tự động chơi lại
   useEffect(() => {
-    // Nếu có người thắng hoặc hòa, đợi 2 giây rồi tự động reset bàn cờ
     if (winnerInfo) {
       const timer = setTimeout(() => {
         handleRestart();
-      }, 2000); // 2000ms = 2 giây
+      }, 2000); 
 
-      // Dọn dẹp timer nếu component bị unmount
       return () => clearTimeout(timer);
     }
-  }, [winnerInfo]); // Effect này sẽ chạy mỗi khi `winnerInfo` thay đổi
-
+  }, [winnerInfo, handleRestart]); // <-- THÊM handleRestart VÀO ĐÂY ĐỂ SỬA LỖI
   
   let status;
   if (winnerInfo) {
