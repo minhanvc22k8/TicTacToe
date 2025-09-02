@@ -64,9 +64,11 @@ export default function App() {
     }
   }, [isXNext, gameMode, winnerInfo, squares]);
 
-  // Cập nhật điểm số
+  // === THAY ĐỔI LỚN TẠI ĐÂY ===
+  // Gộp logic Cập nhật điểm số VÀ Tự động chơi lại vào MỘT useEffect duy nhất.
   useEffect(() => {
     if (winnerInfo) {
+      // 1. Cập nhật điểm số
       setScores(prevScores => {
         const newScores = { ...prevScores };
         if (winnerInfo.winner === 'X') newScores.X++;
@@ -74,20 +76,19 @@ export default function App() {
         else if (winnerInfo.winner === 'T') newScores.T++;
         return newScores;
       });
-    }
-  }, [winnerInfo?.winner]);
-  
-  // Tự động chơi lại
-  useEffect(() => {
-    if (winnerInfo) {
+
+      // 2. Lên lịch tự động chơi lại sau 2 giây
       const timer = setTimeout(() => {
         handleRestart();
       }, 2000); 
 
+      // Dọn dẹp timer khi component unmount (quan trọng)
       return () => clearTimeout(timer);
     }
-  }, [winnerInfo, handleRestart]); // <-- SỬA LỖI: THÊM winnerInfo VÀO ĐÂY
+  }, [winnerInfo, handleRestart]); // Phụ thuộc vào `winnerInfo` và `handleRestart`
   
+  // (Chúng ta đã xóa useEffect tự động chơi lại riêng biệt đi)
+
   let status;
   if (winnerInfo) {
     status = winnerInfo.winner === 'T' ? 'Kết quả: Hòa!' : `Yeah! ${winnerInfo.winner} thắng!`;
