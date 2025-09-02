@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'; // <-- THÊM useCallback
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Board from './components/Board';
 import Scoreboard from './components/Scoreboard';
 import GameControls from './components/GameControls';
@@ -14,17 +14,16 @@ export default function App() {
 
   const winnerInfo = useMemo(() => calculateWinner(squares), [squares]);
 
-  // BỌC TRONG useCallback ĐỂ HÀM NÀY ỔN ĐỊNH, KHÔNG BỊ TẠO LẠI MỖI LẦN RENDER
   const handleRestart = useCallback(() => {
     setSquares(Array(9).fill(null));
     setIsXNext(true);
-  }, []); // Mảng rỗng vì hàm này không phụ thuộc vào bất cứ props hay state nào
+  }, []); 
 
   const handleModeChange = useCallback((mode) => {
     setGameMode(mode);
     setScores(prev => ({ X: prev.X, O: prev.O, T: prev.T, mode: mode }));
     handleRestart();
-  }, [handleRestart]); // Phụ thuộc vào handleRestart
+  }, [handleRestart]); 
 
   const handleClick = (i) => {
     if (winnerInfo || squares[i] || (gameMode !== 'pvp' && !isXNext)) {
@@ -87,7 +86,7 @@ export default function App() {
 
       return () => clearTimeout(timer);
     }
-  }, [winnerInfo, handleRestart]); // <-- THÊM handleRestart VÀO ĐÂY ĐỂ SỬA LỖI
+  }, [winnerInfo, handleRestart]); // <-- SỬA LỖI: THÊM winnerInfo VÀO ĐÂY
   
   let status;
   if (winnerInfo) {
